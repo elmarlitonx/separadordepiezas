@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario Semanal de Contenidos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="encabezado">
+        <h1>Planificador Semanal de Piezas</h1>
+        <p id="info-pieza-madre">Cargando resultados...</p>
+        <div id="alerta-respaldo" class="alerta oculto"></div>
+    </header>
+
+    <main class="contenedor">
+        <!-- Leyenda de colores por formato -->
+        <section class="leyenda">
+            <span class="etiqueta formato-post_linkedin">Post LinkedIn</span>
+            <span class="etiqueta formato-carrusel_linkedin">Carrusel LinkedIn</span>
+            <span class="etiqueta formato-newsletter">Newsletter</span>
+            <span class="etiqueta formato-guion_video_corto">Video Corto</span>
+            <span class="etiqueta formato-infografia">Infografía</span>
+            <span class="etiqueta ocupado">Horario Ocupado</span>
+        </section>
+
+        <!-- Vista semanal (RF-15) -->
+        <section>
+            <h2>Vista Semanal</h2>
+            <div id="calendario-semanal" class="grid-semanal"></div>
+        </section>
+
+        <!-- Piezas no ubicadas (RF-13, RF-15) -->
+        <section>
+            <h2>Piezas que no se pudieron ubicar</h2>
+            <div id="lista-no-ubicadas" class="lista-tarjetas"></div>
+        </section>
+
+        <!-- Piezas rechazadas por validación (RF-11, RNF-09) -->
+        <section>
+            <h2>Piezas rechazadas (Reglas y Cifras)</h2>
+            <div id="lista-rechazadas" class="lista-tarjetas"></div>
+        </section>
+
+        <!-- Avisos y anomalías (RNF-09) -->
+        <section>
+            <h2>Avisos y Anomalías del Sistema</h2>
+            <ul id="lista-avisos" class="lista-avisos"></ul>
+        </section>
+    </main>
+
+    <!-- Carga los datos generados por report.js sin usar fetch ni servidor -->
+    <script src="../outputs/datos.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
