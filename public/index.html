@@ -27,6 +27,23 @@
         <!-- Vista semanal (RF-15) -->
         <section>
             <h2>Vista Semanal</h2>
+            <div class="filtros">
+                <select id="filtro-formato">
+                    <option value="todos">Todos los formatos</option>
+                    <option value="post_linkedin">Post LinkedIn</option>
+                    <option value="carrusel_linkedin">Carrusel LinkedIn</option>
+                    <option value="newsletter">Newsletter</option>
+                    <option value="guion_video_corto">Video Corto</option>
+                    <option value="infografia">Infografía</option>
+                </select>
+
+                <select id="filtro-estado">
+                    <option value="todos">Todos los estados</option>
+                    <option value="pendiente de aprobación">Pendiente de aprobación</option>
+                    <option value="aprobada por LC/DM">Aprobada por LC/DM</option>
+                    <option value="ocupado">Solo horarios ocupados</option>
+                </select>
+            </div>
             <div id="calendario-semanal" class="grid-semanal"></div>
         </section>
 
@@ -50,6 +67,18 @@
     </main>
 
     <!-- Carga los datos generados por report.js sin usar fetch ni servidor -->
+     <!-- Ventana emergente para ver la pieza completa -->
+    <div id="modal-pieza" class="modal oculto">
+        <div class="modal-contenido">
+            <button id="cerrar-modal" class="btn-cerrar">Cerrar X</button>
+            <h3 id="modal-titulo"></h3>
+            <div id="modal-cuerpo"></div>
+            <div class="modal-acciones">
+                <a id="modal-enlace-utm" class="btn-utm" href="#" target="_blank">Abrir enlace con UTM</a>
+                <button id="modal-copiar" class="btn-copiar">Copiar texto</button>
+            </div>
+        </div>
+    </div>
     <script src="../outputs/datos.js"></script>
     <script src="script.js"></script>
 </body>

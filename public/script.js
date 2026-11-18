@@ -26,6 +26,11 @@ function mostrarEncabezado() {
 
 function mostrarCalendarioSemanal() {
     const contenedor = document.getElementById("calendario-semanal");
+    contenedor.innerHTML = "";
+
+    const filtroFormato = document.getElementById("filtro-formato").value;
+    const filtroEstado = document.getElementById("filtro-estado").value;
+
     const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
     // Crear las 7 columnas de la semana
@@ -38,50 +43,109 @@ function mostrarCalendarioSemanal() {
         columnas.push(div);
     }
 
-    // Mostrar horarios ya ocupados del calendario_ocupado.csv
-    for (const ocupado of datos.calendario_ocupado || []) {
-        const idx = obtenerIndiceDia(ocupado.fecha);
-        if (idx === -1) continue;
+    // Mostrar horarios ya ocupados del calendario_ocupado.csv según el filtro
+    if (filtroFormato === "todos" && (filtroEstado === "todos" || filtroEstado === "ocupado")) {
+        for (const ocupado of datos.calendario_ocupado || []) {
+            const idx = obtenerIndiceDia(ocupado.fecha);
+            if (idx === -1) continue;
 
-        const tarjeta = document.createElement("div");
-        tarjeta.className = "tarjeta tarjeta-ocupado";
-        tarjeta.innerHTML = `
-            <strong>Ocupado (${ocupado.hora || ""})</strong><br>
-            <span>${ocupado.tema || "Sin tema"}</span><br>
-            <small>${ocupado.fecha}</small>
-        `;
-        columnas[idx].appendChild(tarjeta);
+            const tarjeta = document.createElement("div");
+            tarjeta.className = "tarjeta tarjeta-ocupado";
+            tarjeta.innerHTML = `
+                <strong>Ocupado (${ocupado.hora || ""})</strong><br>
+                <span>${ocupado.tema || "Sin tema"}</span><br>
+                <small>${ocupado.fecha}</small>
+            `;
+            columnas[idx].appendChild(tarjeta);
+        }
     }
 
-    // Mostrar piezas programadas (RF-15 y RF-16)
+    // Mostrar piezas programadas filtradas por formato y estado (RF-15 y RF-16)
     for (const pieza of datos.programadas || []) {
+        if (filtroFormato !== "todos" && pieza.formato !== filtroFormato) continue;
+        if (filtroEstado !== "todos" && pieza.estado !== filtroEstado) continue;
+
         const idx = obtenerIndiceDia(pieza.fecha_programada);
         if (idx === -1) continue;
 
+        const yaAprobada = pieza.estado === "aprobada por LC/DM";
+
         const tarjeta = document.createElement("div");
-        tarjeta.className = `tarjeta borde-${pieza.formato}`;
+        tarjeta.className = `tarjeta tarjeta-clickeable borde-${pieza.formato}`;
         tarjeta.innerHTML = `
             <strong>${pieza.formato}</strong> (${pieza.hora_programada})<br>
             <div><strong>Fecha:</strong> ${pieza.fecha_programada}</div>
             <div><strong>Tema:</strong> ${pieza.tema}</div>
             <div><strong>Puntaje:</strong> ${pieza.puntaje}/100 (${pieza.nivel_confianza})</div>
-            <span class="estado">${pieza.estado}</span><br>
-            <button class="btn-aprobar">Aprobar (LC / DM)</button>
+            <span class="estado ${yaAprobada ? "aprobada" : ""}">${pieza.estado}</span><br>
+            <button class="btn-aprobar" ${yaAprobada ? "disabled" : ""}>
+                ${yaAprobada ? "Aprobada" : "Aprobar (LC / DM)"}
+            </button>
         `;
+
+        // Al hacer clic en la tarjeta se abre el detalle completo de la pieza
+        tarjeta.addEventListener("click", () => abrirDetallePieza(pieza));
 
         // Aprobación humana local (RF-16: no publica en LinkedIn)
         const boton = tarjeta.querySelector(".btn-aprobar");
-        const etiquetaEstado = tarjeta.querySelector(".estado");
-        boton.addEventListener("click", () => {
-            etiquetaEstado.textContent = "aprobada por LC/DM";
-            etiquetaEstado.classList.add("aprobada");
-            boton.disabled = true;
-            boton.textContent = "Aprobada";
+        boton.addEventListener("click", (evento) => {
+            evento.stopPropagation();
+            pieza.estado = "aprobada por LC/DM";
+            mostrarCalendarioSemanal();
         });
 
         columnas[idx].appendChild(tarjeta);
     }
 }
+
+document.getElementById("filtro-formato").addEventListener("change", mostrarCalendarioSemanal);
+document.getElementById("filtro-estado").addEventListener("change", mostrarCalendarioSemanal);
+
+function abrirDetallePieza(pieza) {
+    const modal = document.getElementById("modal-pieza");
+    const titulo = document.getElementById("modal-titulo");
+    const cuerpo = document.getElementById("modal-cuerpo");
+    const enlace = document.getElementById("modal-enlace-utm");
+    const btnCopiar = document.getElementById("modal-copiar");
+
+    titulo.textContent = `${pieza.formato} — ${pieza.tema}`;
+    cuerpo.innerHTML = "";
+
+    const estructura = pieza.estructura || {};
+    for (const [parte, valor] of Object.entries(estructura)) {
+        const div = document.createElement("div");
+        div.className = "bloque-parte";
+
+        let contenidoTexto = "";
+        if (Array.isArray(valor)) {
+            contenidoTexto = valor.map((item, i) =>
+                typeof item === "object"
+                    ? `${i + 1}. ${item.titulo || ""}: ${item.contenido || ""}`
+                    : `${i + 1}. ${item}`
+            ).join("\n");
+        } else {
+            contenidoTexto = String(valor || "");
+        }
+
+        div.innerHTML = `<strong>${parte.toUpperCase()}:</strong>\n${contenidoTexto}`;
+        cuerpo.appendChild(div);
+    }
+
+    enlace.href = pieza.enlace_utm || "#";
+    enlace.style.display = pieza.enlace_utm ? "inline-block" : "none";
+
+    btnCopiar.onclick = () => {
+        navigator.clipboard.writeText(cuerpo.innerText);
+        btnCopiar.textContent = "¡Copiado!";
+        setTimeout(() => { btnCopiar.textContent = "Copiar texto"; }, 1500);
+    };
+
+    modal.classList.remove("oculto");
+}
+
+document.getElementById("cerrar-modal").addEventListener("click", () => {
+    document.getElementById("modal-pieza").classList.add("oculto");
+});
 
 function mostrarNoUbicadas() {
     const contenedor = document.getElementById("lista-no-ubicadas");

@@ -2,6 +2,8 @@
 // Conecta lectura, extracción, diagnóstico, transformación, validación,
 // programación de calendario, puntuación y generación de archivos.
 
+import path from "node:path";
+import { exec } from "node:child_process";
 import { cargarEntradas } from "./input.js";
 import { extraerContenido } from "./extractor.js";
 import { diagnosticarContenido } from "./diagnostic.js";
@@ -66,10 +68,30 @@ async function ejecutar() {
     console.log(`Piezas programadas: ${calendario.total_programadas}`);
     console.log(`Piezas no ubicadas: ${calendario.total_no_ubicadas}`);
     console.log(`Archivos generados en ${reporte.carpeta}: ${reporte.archivos.join(", ")}`);
-    console.log("Abre public/index.html en tu navegador para ver el calendario semanal.");
+    console.log("Abriendo calendario en el navegador...");
+    abrirNavegador("./public/index.html");
 }
 
 ejecutar().catch(error => {
     console.error("Error al ejecutar el proceso:", error.message);
     process.exit(1);
 });
+
+function abrirNavegador(rutaRelativa) {
+    const rutaCompleta = path.resolve(rutaRelativa);
+
+    let comando = "";
+    if (process.platform === "win32") {
+        comando = `start "" "${rutaCompleta}"`;
+    } else if (process.platform === "darwin") {
+        comando = `open "${rutaCompleta}"`;
+    } else {
+        comando = `xdg-open "${rutaCompleta}"`;
+    }
+
+    exec(comando, error => {
+        if (error) {
+            console.log(`No se pudo abrir automáticamente. Abre este archivo manualmente: ${rutaCompleta}`);
+        }
+    });
+}
